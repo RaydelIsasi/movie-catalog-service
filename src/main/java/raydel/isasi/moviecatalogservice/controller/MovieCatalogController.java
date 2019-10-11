@@ -47,15 +47,16 @@ public class MovieCatalogController {
 	public List<CatalogItem> getCatalog(@PathVariable("userid") String userid) {
 
 		// get all rated movies id
-		UserRatings userratings = rest.getForObject("http://localhost:8082/ratingsdata/users/"+userid, UserRatings.class);
+		UserRatings userratings = rest.getForObject("http://rating-data-service/ratingsdata/users/" + userid,
+				UserRatings.class);
 		// for each movie id , call movie info service and get details
 		return userratings.getRating().stream().map(rating -> {
 			// for each movie id , call movie info service and get details
-			Movie movie = rest.getForObject("http://localhost:8081/movies/" + rating.getMovieId(), Movie.class);
+			Movie movie = rest.getForObject("http://movie-info-service/movies/" + rating.getMovieId(), Movie.class);
 
 			// put them all together
 
-			return new CatalogItem(movie.getMovieName(), "SCIFI", rating.getRating());
+			return new CatalogItem(movie.getMovieName(), movie.getDescription(), rating.getRating());
 		}
 
 		).collect(Collectors.toList());
