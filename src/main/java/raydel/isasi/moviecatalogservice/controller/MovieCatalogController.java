@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +30,14 @@ import org.springframework.web.reactive.function.client.WebClient.Builder;
 import org.springframework.web.reactive.function.client.WebClient.RequestHeadersSpec;
 import org.springframework.web.util.UriBuilderFactory;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+
 import raydel.isasi.moviecatalogservice.pojo.CatalogItem;
 import raydel.isasi.moviecatalogservice.pojo.Movie;
 import raydel.isasi.moviecatalogservice.pojo.Rating;
 import raydel.isasi.moviecatalogservice.pojo.UserRatings;
+import raydel.isasi.moviecatalogservice.service.MovieInfoService;
+import raydel.isasi.moviecatalogservice.service.UserInfoService;
 
 @RestController
 @RequestMapping("/catalog")
@@ -40,26 +45,25 @@ public class MovieCatalogController {
 
 	@Autowired
 	RestTemplate rest;
+
+	@Autowired
+	MovieInfoService movieinfo;
+
+	@Autowired
+	UserInfoService userinfo;
+
 	@Autowired
 	WebClient.Builder webclientbuilder;
 
 	@PostMapping("/{userid}")
+
 	public List<CatalogItem> getCatalog(@PathVariable("userid") String userid) {
 
 		// get all rated movies id
-		UserRatings userratings = rest.getForObject("http://rating-data-service/ratingsdata/users/" + userid,
-				UserRatings.class);
+		UserRatings userratings = userinfo.getUserRating(userid);
 		// for each movie id , call movie info service and get details
-		return userratings.getRating().stream().map(rating -> {
-			// for each movie id , call movie info service and get details
-			Movie movie = rest.getForObject("http://movie-info-service/movies/" + rating.getMovieId(), Movie.class);
-
-			// put them all together
-
-			return new CatalogItem(movie.getMovieName(), movie.getDescription(), rating.getRating());
-		}
-
-		).collect(Collectors.toList());
+		return userratings.getRating().stream().map(rating -> movieinfo.getCatalogItem(rating))
+				.collect(Collectors.toList());
 
 		// asyncronous call
 		// Movie movie =
@@ -67,4 +71,5 @@ public class MovieCatalogController {
 		// rating.getMovieId())
 		// .retrieve().bodyToMono(Movie.class).block();
 	}
+
 }

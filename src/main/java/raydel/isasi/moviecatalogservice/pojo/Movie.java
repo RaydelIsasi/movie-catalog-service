@@ -2,6 +2,11 @@ package raydel.isasi.moviecatalogservice.pojo;
 
 public class Movie {
 
+	public Movie() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
 	private int  MovieId;
 
 	private String movieName;
