@@ -3,6 +3,8 @@ package raydel.isasi.moviecatalogservice.controller;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -57,19 +59,19 @@ public class MovieCatalogController {
 
 	@PostMapping("/{userid}")
 
-	public List<CatalogItem> getCatalog(@PathVariable("userid") String userid) {
+	public List<CatalogItem> getCatalog(@PathVariable("userid") String userid) throws ExecutionException, InterruptedException {
 
 		// get all rated movies id
-		UserRatings userratings = userinfo.getUserRating(userid);
+		CompletableFuture<UserRatings> userratings = userinfo.getUserRating(userid);
 		// for each movie id , call movie info service and get details
-		return userratings.getRating().stream().map(rating -> movieinfo.getCatalogItem(rating))
+		return userratings.get().getRating().stream().map(rating -> movieinfo.getCatalogItem(rating))
 				.collect(Collectors.toList());
 
-		// asyncronous call
-		// Movie movie =
-		// webclientbuilder.build().get().uri("http://localhost:8081/movies/" +
-		// rating.getMovieId())
-		// .retrieve().bodyToMono(Movie.class).block();
+
+
 	}
+	
+	
+
 
 }
